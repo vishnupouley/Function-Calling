@@ -31,7 +31,7 @@ Ask **“evening plans in Goa?”** and get back a 70-word roast + actionable ad
 
 > Zero-dependency installs, zero `requirements.txt` drama.
 
----
+--
 
 ### 1️⃣ Clone & Enter
 ```bash
@@ -39,7 +39,7 @@ git clone https://github.com/vishnupouley/Function-Calling.git
 cd Function-Calling/Weather\ Forecasting
 ```
 
----
+--
 
 ### 2️⃣ Create & Activate Virtual Environment with UV
 ```bash
@@ -47,7 +47,7 @@ uv venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 ```
 
----
+--
 
 ### 3️⃣ Install All Locked Dependencies
 ```bash
@@ -56,7 +56,7 @@ uv sync        # installs everything recorded in uv.lock
 > `uv sync` is the new `pip install -r requirements.txt`.  
 > It respects `pyproject.toml` *and* the lock file.
 
----
+--
 
 ### 4️⃣ Configure Secrets
 Create `.env` in the same folder as `main.py`:
@@ -65,7 +65,7 @@ echo "GROQ_API_KEY=sk-..." > .env
 echo "OPENWEATHER_API_KEY=your_owm_key" >> .env
 ```
 
----
+--
 
 ### 5️⃣ Launch the Dark Oracle
 ```bash
@@ -73,7 +73,7 @@ python main.py
 ```
 Your browser will open at `http://localhost:7860` with the moody chat UI ready to roast the weather.
 
----
+--
 
 ### 🧹 Quick Cleanup (Optional)
 ```bash
@@ -149,4 +149,5 @@ Weather Forecasting/
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com/?font=Fira+Code&size=20&duration=3000&color=7f5af0&center=true&vCenter=true&width=600&lines=Stay+dry,+stay+sarcastic!"/>
 </p>
+
 
