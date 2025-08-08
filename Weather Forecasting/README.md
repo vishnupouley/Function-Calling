@@ -27,13 +27,13 @@ Ask **“evening plans in Goa?”** and get back a 70-word roast + actionable ad
 
 ## ⚙️ Setup & Run
 
-# 🚀 One-Line UV Guide for `Dark-Weather Chat`
+### 🚀 One-Line UV Guide for `Dark-Weather Chat`
 
 > Zero-dependency installs, zero `requirements.txt` drama.
 
 ---
 
-## 1️⃣ Clone & Enter
+### 1️⃣ Clone & Enter
 ```bash
 git clone https://github.com/vishnupouley/Function-Calling.git
 cd Function-Calling/Weather\ Forecasting
@@ -41,7 +41,7 @@ cd Function-Calling/Weather\ Forecasting
 
 ---
 
-## 2️⃣ Create & Activate Virtual Environment with UV
+### 2️⃣ Create & Activate Virtual Environment with UV
 ```bash
 uv venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
@@ -49,7 +49,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 ---
 
-## 3️⃣ Install All Locked Dependencies
+### 3️⃣ Install All Locked Dependencies
 ```bash
 uv sync        # installs everything recorded in uv.lock
 ```
@@ -58,7 +58,7 @@ uv sync        # installs everything recorded in uv.lock
 
 ---
 
-## 4️⃣ Configure Secrets
+### 4️⃣ Configure Secrets
 Create `.env` in the same folder as `main.py`:
 ```bash
 echo "GROQ_API_KEY=sk-..." > .env
@@ -67,7 +67,7 @@ echo "OPENWEATHER_API_KEY=your_owm_key" >> .env
 
 ---
 
-## 5️⃣ Launch the Dark Oracle
+### 5️⃣ Launch the Dark Oracle
 ```bash
 python main.py
 ```
@@ -75,7 +75,7 @@ Your browser will open at `http://localhost:7860` with the moody chat UI ready t
 
 ---
 
-## 🧹 Quick Cleanup (Optional)
+### 🧹 Quick Cleanup (Optional)
 ```bash
 deactivate
 ```
@@ -149,3 +149,4 @@ Weather Forecasting/
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com/?font=Fira+Code&size=20&duration=3000&color=7f5af0&center=true&vCenter=true&width=600&lines=Stay+dry,+stay+sarcastic!"/>
 </p>
+
