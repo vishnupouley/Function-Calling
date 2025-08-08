@@ -22,21 +22,39 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "get_today_forecast",
-            "description": "Fetch today’s 3-hourly weather forecast for a given city",
+            "name": "get_weather_window",
+            "description": (
+                "Return 3-hourly weather for any part of the day "
+                "(morning, afternoon, evening, night, or whole day)."
+            ),
             "parameters": {
                 "type": "object",
-                "properties": {"location": {"type": "string"}},
-                "required": ["location"],
+                "properties": {
+                    "location": {"type": "string"},
+                    "period":   {"type": "string", "enum": ["morning", "afternoon", "evening", "night", "day"]},
+                },
+                "required": ["location", "period"],
             },
         }
     }
 ]
 
 # --------------------------------------------------
-# 2️⃣  Core forecast fetcher
+# 2️⃣  Flexible weather window (morning / afternoon / evening / night / day)
 # --------------------------------------------------
-def get_today_forecast(location: str) -> dict:
+def get_weather_window(location: str, period: str) -> dict:
+    """
+    period ∈ {"morning", "afternoon", "evening", "night", "day"}
+    """
+    mapping = {
+        "morning":  (6, 12),
+        "afternoon": (12, 17),
+        "evening":   (17, 21),
+        "night":     (21, 24),
+        "day":       (6, 24),
+    }
+    start_h, end_h = mapping.get(period.lower(), (0, 24))
+
     api_key = os.getenv("OPENWEATHER_API_KEY")
     if not api_key:
         raise RuntimeError("OPENWEATHER_API_KEY missing")
@@ -56,89 +74,81 @@ def get_today_forecast(location: str) -> dict:
         timeout=5,
     ).json()
 
-    today = datetime.now(tz=timezone.utc).date()
-    entries = [
-        {
-            "time": datetime.strptime(e["dt_txt"], "%Y-%m-%d %H:%M:%S")
-            .replace(tzinfo=timezone.utc)
-            .strftime("%H:%M"),
-            "temp": e["main"]["temp"],
-            "desc": e["weather"][0]["description"],
-        }
-        for e in fc["list"]
-        if datetime.strptime(e["dt_txt"], "%Y-%m-%d %H:%M:%S")
-        .replace(tzinfo=timezone.utc)
-        .date()
-        == today
-    ]
-    if not entries:
-        raise ValueError("No data for today")
-    return {"city": fc["city"]["name"], "entries": entries}
+    slices = []
+    for e in fc["list"]:
+        dt = datetime.strptime(e["dt_txt"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        if start_h <= dt.hour < end_h or period == "day":
+            slices.append({
+                "time": dt.strftime("%H:%M"),
+                "temp": e["main"]["temp"],
+                "weather": e["weather"][0]["description"],
+                "rain": e.get("rain", {}).get("3h", 0),
+                "wind": e["wind"]["speed"],
+            })
+    return {"city": fc["city"]["name"], "period": period, "slices": slices}
 
 # --------------------------------------------------
 # 3️⃣  Chat logic (tuple history, Groq messages)
 # --------------------------------------------------
-def chat_fn(history, user_message):
+def chat_fn(history: list[list[str]], user_message: str) -> list[list[str]]:
     """
-    history: list of [user_str, bot_str] tuples
-    returns updated list of tuples
+    history: tuple list (kept for backward compat)
+    returns: updated tuple list
     """
-    # Build clean OpenAI-style messages
-    messages = [{"role": "system", "content": "You are a sarcastic, yet gentle meteorologist."}]
-    for human, bot in history:
-        messages.append({"role": "user", "content": human})
-        if bot:
-            messages.append({"role": "assistant", "content": bot})
-    messages.append({"role": "user", "content": user_message})
+    # build dict history
+    dict_hist = [{"role": "user", "content": u} for u, _ in history] + \
+                [{"role": "assistant", "content": a} for _, a in history if a]
+    dict_hist.append({"role": "user", "content": user_message})
 
-    # Call Groq with tools
+    # call the short, sarcastic logic that now lives in bot()
+    messages = [{"role": "system", "content": (
+        "You are a sarcastic weather friend. "
+        "Reply with short in 70 - 100 words, simple words, one tiny jab, and one practical tip. "
+        "No big vocabulary in the answer itself."
+    )}] + dict_hist
+
     llm = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=messages,
         tools=TOOLS,
         tool_choice="auto",
-        temperature=0.4,
-        max_tokens=200,
+        max_tokens=130,
+        temperature=0.45,
     )
 
-    # Handle function call
+    # same short-answer logic as in bot()
     if llm.choices[0].message.tool_calls:
         call = llm.choices[0].message.tool_calls[0]
         city = json.loads(call.function.arguments)["location"]
+        period = json.loads(call.function.arguments).get("period", "day")
         try:
-            data = get_today_forecast(city)
+            data = get_weather_window(city, period)
         except Exception as e:
-            assistant_text = f"Oops! {e}"
+            answer = f"Oops: {e}"
         else:
-            snapshot = (
-                f"Today’s weather for {data['city']}:\n"
-                + "\n".join(f"{e['time']} – {e['temp']:.1f} °C, {e['desc']}" for e in data["entries"])
+            snippet = ", ".join(
+                f"{s['time']} {s['temp']}°C {s['weather']}" for s in data["slices"][:3]
             )
-            # Ask LLM to speak nicely
-            nice_prompt = (
-                "Summarise the following in one warm, polished sentence:\n\n"
-                f"{snapshot}"
-            )
-            nice = client.chat.completions.create(
+            prompt = f"{city} {period}: {snippet}. One snarky 80-word tip."
+            short = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": nice_prompt}],
-                temperature=0.3,
-                max_tokens=140,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100,
+                temperature=0.4,
             )
-            assistant_text = nice.choices[0].message.content.strip()
+            answer = short.choices[0].message.content.strip()
     else:
-        assistant_text = llm.choices[0].message.content.strip()
+        answer = llm.choices[0].message.content.strip()
 
-    # Append to tuple history
-    history.append([user_message, assistant_text])
+    history.append([user_message, answer])
     return history
 
 # --------------------------------------------------
 # 4️⃣  Gradio GUI (tuple history, no ChatInterface)
 # --------------------------------------------------
 css = """
-body {background: linear-gradient(135deg, #0f0f1e, #1e1e2f);}
-.gradio-container {color: #e0e0e0;}
+body {background: linear-gradient(135deg, #101027, #2A2A3B);}
+.gradio-container {color: #E0E0E0EA;}
 .message {background: #2b2b44 !important; border-radius: 12px !important;}
 .message.user {background: #2b2b44 !important; border-radius: 12px !important;}
 .message.bot {background: #2b2b44 !important; border-radius: 12px !important;}
@@ -146,25 +156,57 @@ body {background: linear-gradient(135deg, #0f0f1e, #1e1e2f);}
 
 with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue="purple")) as demo:
     gr.Markdown("# 🌌 Dark-Weather Chat")
-    chatbot = gr.Chatbot(height=450, bubble_full_width=False)
+    chatbot = gr.Chatbot(height=450, type="messages")
     msg = gr.Textbox(
         placeholder="Ask me about the weather anywhere...",
         container=False,
         scale=8,
     )
-    clear = gr.Button("🗑️ Clear", scale=1)
+    examples = gr.Examples(
+        examples=[
+            "morning weather in Helsinki—do I need mittens or just sarcasm?",
+            "afternoon forecast in Cairo—will the sun roast my patience or just my coffee?",
+            "evening drizzle in Seattle—umbrella essential or can I wing it with sass?",
+            "night shenanigans in Rio—jacket or just vibes under the stars?",
+            "full-day weather rollercoaster in Melbourne—layers, sunscreen, or both?",
+            "Planning a late-night barbecue in London—umbrella or not?",
+            "Brunch under the Barcelona sun—will the afternoon sizzle or simply simmer?",
+            "Tokyo twilight stroll—cardigan or courage?",
+            "Berlin all-nighter—windbreaker or wishful thinking?",
+            "Sydney sunrise hike—frostbite or flip-flops?"
+        ],
+        inputs=msg,
+        label="Try these examples",
+    )
+    clear_btn = gr.Button("🗑️ Clear", scale=1)
 
+    # ----------------------------
+    # 1️⃣  User step – just append the user dict
+    # ----------------------------
     def user(user_message, history):
-        return "", history + [[user_message, None]]
+        return "", history + [{"role": "user", "content": user_message.strip()}]
 
+    # ----------------------------
+    # 2️⃣  Bot step – one-shot, no double history
+    # ----------------------------
     def bot(history):
-        history = chat_fn(history[:-1], history[-1][0])
-        return history
+        # history is already dict-style; feed it straight to chat_fn
+        tuple_history = [
+            [h["content"], a["content"]]
+            for h, a in zip(history[::2], history[1::2])
+        ]
+        updated_tuples = chat_fn(tuple_history, history[-1]["content"])
+        # turn the returned tuples back into dict list
+        new_history = []
+        for u, a in updated_tuples:
+            new_history.extend([{"role": "user", "content": u},
+                                {"role": "assistant", "content": a}])
+        return new_history
 
     msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(
         bot, chatbot, chatbot
     )
-    clear.click(lambda: None, None, chatbot, queue=False)
+    clear_btn.click(lambda: [], None, chatbot, queue=False)
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", share=False, server_port=7860)
