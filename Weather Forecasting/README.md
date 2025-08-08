@@ -84,7 +84,7 @@ That’s it — pure **UV** magic, no `pip` required.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack {#tech-stack}
 
 - **Python 3.10+**
 - **Groq LLM** (`llama-3.1-8b-instant`)
@@ -106,13 +106,12 @@ That’s it — pure **UV** magic, no `pip` required.
 
 ---
 
-## 🖼️ Workspace Layout
+## 🖼️ Workspace Layout {#workspace-layout}
 
 ```
 Weather Forecasting/
 ├── .env                 # secrets (never commit)
 ├── main.py              # full app logic
-├── requirements.txt     # pip deps
 ├── README.md            # this beauty
 ├── .gitignore
 └── uv.lock / pyproject.toml  # optional uv setup
@@ -139,3 +138,4 @@ Weather Forecasting/
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com/?font=Fira+Code&size=20&duration=3000&color=7f5af0&center=true&vCenter=true&width=600&lines=Stay+dry,+stay+sarcastic!"/>
 </p>
+
