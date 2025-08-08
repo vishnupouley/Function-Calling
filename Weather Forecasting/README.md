@@ -9,9 +9,9 @@
 1. [✨ Introduction](#-introduction)  
 2. [⚙️ Setup & Run](#-setup--run)  
 3. [🧠 Overview](#-overview)  
-4. [🛠️ Tech Stack](#-tech-stack)  
+4. [🛠️ Tech Stack](#tech-stack)  
 5. [🎩 Usage & Features](#-usage--features)  
-6. [🖼️ Workspace Layout](#-workspace-layout)  
+6. [🖼️ Workspace Layout](#workspace-layout)  
 7. [📚 References](#-references)  
 8. [🤝 Contribute & Flex](#-contribute--flex)
 
@@ -137,5 +137,6 @@ Weather Forecasting/
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com/?font=Fira+Code&size=20&duration=3000&color=7f5af0&center=true&vCenter=true&width=600&lines=Stay+dry,+stay+sarcastic!"/>
 </p>
+
 
 
