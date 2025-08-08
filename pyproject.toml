@@ -1,0 +1,13 @@
+[project]
+name = "function-calling"
+version = "0.1.0"
+description = "To create a program which helps the groq llms for function calling, only for weather forecasting"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gradio>=5.41.1",
+    "groq>=0.31.0",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.4",
+    "tabulate>=0.9.0",
+]
