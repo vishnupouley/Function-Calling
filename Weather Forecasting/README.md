@@ -84,7 +84,7 @@ That’s it — pure **UV** magic, no `pip` required.
 
 ---
 
-## 🛠️ Tech Stack {#tech-stack}
+<h2 id="tech-stack">🛠️ Tech Stack</h2>
 
 - **Python 3.10+**
 - **Groq LLM** (`llama-3.1-8b-instant`)
@@ -105,8 +105,7 @@ That’s it — pure **UV** magic, no `pip` required.
 | **Night** | *“night in Rio—jacket or vibes?”* | *“24 °C, humid breeze. Jacket is just extra luggage.”* |
 
 ---
-
-## 🖼️ Workspace Layout {#workspace-layout}
+<h2 id="workspace-layout">🖼️ Workspace Layout</h2>
 
 ```
 Weather Forecasting/
@@ -138,4 +137,5 @@ Weather Forecasting/
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com/?font=Fira+Code&size=20&duration=3000&color=7f5af0&center=true&vCenter=true&width=600&lines=Stay+dry,+stay+sarcastic!"/>
 </p>
+
 
