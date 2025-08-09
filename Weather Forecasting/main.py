@@ -64,6 +64,7 @@ def get_weather_window(location: str, period: str) -> dict:
         params={"q": location, "limit": 1, "appid": api_key},
         timeout=5,
     ).json()
+    # print(f"\ngeo = {json.dumps(geo, indent=4, sort_keys=True)}")
     if not geo:
         raise ValueError("City not found")
     lat, lon = geo[0]["lat"], geo[0]["lon"]
@@ -74,10 +75,14 @@ def get_weather_window(location: str, period: str) -> dict:
         timeout=5,
     ).json()
 
+    # print(f"\nfc = {json.dumps(fc, indent=4, sort_keys=True)}")
+
     slices = []
     for e in fc["list"]:
         dt = datetime.strptime(e["dt_txt"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        if start_h <= dt.hour < end_h or period == "day":
+        print(f"today: {datetime.now(tz=timezone.utc).date()}")
+        print(f"dt: {dt.date()}")
+        if (start_h <= dt.hour < end_h or period == "day") and dt.date() == datetime.now(tz=timezone.utc).date():
             slices.append({
                 "time": dt.strftime("%H:%M"),
                 "temp": e["main"]["temp"],
@@ -85,6 +90,7 @@ def get_weather_window(location: str, period: str) -> dict:
                 "rain": e.get("rain", {}).get("3h", 0),
                 "wind": e["wind"]["speed"],
             })
+    print(f"\nslices = {json.dumps(slices, indent=4, sort_keys=True)}")
     return {"city": fc["city"]["name"], "period": period, "slices": slices}
 
 # --------------------------------------------------
@@ -103,8 +109,13 @@ def chat_fn(history: list[list[str]], user_message: str) -> list[list[str]]:
     # call the short, sarcastic logic that now lives in bot()
     messages = [{"role": "system", "content": (
         "You are a sarcastic weather friend. "
-        "Reply with short in 70 - 100 words, simple words, one tiny jab, and one practical tip. "
-        "No big vocabulary in the answer itself."
+        "1. If the tool returns an empty slice OR the location is not found, "
+        "   reply ONLY with: \"I couldn't find weather data for <location>.\" "
+        "2. If the period is impossible (e.g. morning when user asked evening), "
+        "   reply ONLY with: \"Please ask for a valid period.\" "
+        "3. If data exists, Reply with short in 70 - 100 words"
+        " simple words, one tiny jab, and one practical tip."
+        "4. No big vocabulary in the answer itself."
     )}] + dict_hist
 
     llm = client.chat.completions.create(
@@ -126,14 +137,17 @@ def chat_fn(history: list[list[str]], user_message: str) -> list[list[str]]:
         except Exception as e:
             answer = f"Oops: {e}"
         else:
-            snippet = ", ".join(
-                f"{s['time']} {s['temp']}°C {s['weather']}" for s in data["slices"][:3]
-            )
-            prompt = f"{city} {period}: {snippet}. One snarky 80-word tip."
+            if data["slices"]:
+                snippet = ", ".join(
+                    f"{s['time']} {s['temp']}°C {s['weather']}" for s in data["slices"][:3]
+                )
+                prompt = f"{city} {period}: {snippet}. One snarky 80-word tip. "
+            else:
+                prompt = f"{city} {period}: No reports. Because, you know, the weather is SO UNPREDICTABLE. Go outside and check yourself. "
             short = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=100,
+                max_tokens=140,
                 temperature=0.4,
             )
             answer = short.choices[0].message.content.strip()
