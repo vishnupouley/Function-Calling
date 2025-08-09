@@ -143,7 +143,7 @@ def chat_fn(history: list[list[str]], user_message: str) -> list[list[str]]:
                 )
                 prompt = f"{city} {period}: {snippet}. One snarky 80-word tip. "
             else:
-                prompt = f"{city} {period}: No reports. Because, you know, the weather is SO UNPREDICTABLE. Go outside and check yourself. "
+                prompt = f"{city} {period}: Since the timing is wrong, reply with a snarky tip that the timing is wrong. "
             short = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": prompt}],
