@@ -7,12 +7,12 @@ import os
 import pytz
 import json
 import requests
-from datetime import datetime, timezone
 from tabulate import tabulate
+from datetime import datetime, timezone
 
 import gradio as gr
-from dotenv import load_dotenv
 from groq import Groq
+from dotenv import load_dotenv
 
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -122,7 +122,7 @@ def get_weather_window(location: str, period: str) -> dict:
 
 
 # --------------------------------------------------
-# 3️⃣  Current weather (location)
+# 3️⃣  Current time and weather (location)
 # --------------------------------------------------
 def get_time_weather(location: str) -> str:
     """Local clock + current weather in a pretty markdown table."""
@@ -186,7 +186,8 @@ def chat_fn(history: list[list[str]], user_message: str) -> list[list[str]]:
                 "You are a sarcastic weather friend. "
                 "Decide which tool to use:"
                 "- If the user asks for **time** OR **date** OR **current weather** for a specific location, call `get_time_weather`."
-                "- If the user asks for a **period** (morning, afternoon, evening, night, day) or a **social scenario** for a specific location, call `get_weather_window`."
+                "- If the user asks for a **period** (morning, afternoon, evening, night, day) " 
+                    "or a **social scenario** for a specific location, call `get_weather_window`."
                 "1. If the tool returns an empty slice OR the location is not found, "
                 '   reply ONLY with: "I couldn\'t find weather data for <location>." '
                 "2. If the period is impossible (e.g. morning when user asked evening), "
@@ -273,19 +274,19 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue="purple")) as demo:
     )
     examples = gr.Examples(
         examples=[
-            "morning weather in Helsinki—do I need mittens or just sarcasm?",
-            "afternoon forecast in Cairo—will the sun roast my patience or just my coffee?",
-            "evening drizzle in Seattle—umbrella essential or can I wing it with sass?",
-            "night shenanigans in Rio—jacket or just vibes under the stars?",
+            "Morning weather in Helsinki—do I need mittens or just sarcasm?",
+            "Afternoon forecast in Cairo—will the sun roast my patience or just my coffee?",
+            "Evening drizzle in Seattle—umbrella essential or can I wing it with sass?",
+            "Night shenanigans in Rio—jacket or just vibes under the stars?",
             "What's the weather in New York City?",
-            "full-day weather rollercoaster in Melbourne—layers, sunscreen, or both?",
+            "Full-day weather rollercoaster in Melbourne—layers, sunscreen, or both?",
             "Planning a late-night barbecue in London—umbrella or not?",
             "Brunch under the Barcelona sun—will the afternoon sizzle or simply simmer?",
             "What's the time in Dublin?",
             "Tokyo twilight stroll—cardigan or courage?",
             "Berlin all-nighter—windbreaker or wishful thinking?",
             "Sydney sunrise hike—frostbite or flip-flops?",
-            "what's the date and time in Singapore?",
+            "What's the date and time in Singapore?",
         ],
         examples_per_page=5,
         inputs=msg,
